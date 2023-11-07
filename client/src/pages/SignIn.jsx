@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux"; 
+import { signInStart, signInSuccess, signInFailure} from "../redux/user/userSlice";
 
 const SignIn = () => {
   //states
   const [formData, setFormData] = useState({});
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const {loading, error} = useSelector((state) => state.user)
 
   const navigate = useNavigate();
+  const dispatch = useDispatch(); //we can dispatch the function using this hook
 
   //this function saves the values in form to the state obj
   const handleChange = (e) => {
@@ -21,8 +23,7 @@ const SignIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault(); //prevents refresher/rerender of page on submit
     try {
-      setLoading(true);
-
+      dispatch(signInStart());
       const res = await fetch("/api/auth/signin", {
         method: "POST",
         headers: {
@@ -34,16 +35,13 @@ const SignIn = () => {
       console.log(data);
       if (data.success === false) {
         //success is the json key defined in index
-        setError(data.message);
-        setLoading(false);
+        dispatch(signInFailure(data.message))
         return;
       }
-      setLoading(false);
-      setError(null);
+      dispatch(signInSuccess(data));
       navigate("/");
     } catch (error) {
-      setLoading(false);
-      setError(error.message);
+      dispatch(signInFailure(error.message))
       console.log(error);
     }
   };
